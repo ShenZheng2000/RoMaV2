@@ -1,3 +1,5 @@
+demo/**/*.jpg
+demo/**/*.png
 __pycache__/
 .vscode
 .venv
