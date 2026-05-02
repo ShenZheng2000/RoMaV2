@@ -85,3 +85,20 @@ def visualize_confidence_maps(overlap_BA, warp_AB, im1_path, im2_path, save_path
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
     combined.save(str(save_path))
     print(f"Saved confidence overlay to {save_path}")
+
+
+def save_saliency_map(overlap_BA, grid_shape=(31, 51), pkl_path="dataset_saliency.pkl", png_path="dataset_saliency.png"):
+    import pickle
+
+    # save full-res grayscale confidence of right image (no overlay)
+    sal_np = overlap_BA[..., 0].cpu().numpy()
+    sal_np = (sal_np - sal_np.min()) / (sal_np.max() - sal_np.min() + 1e-8)
+    Image.fromarray((sal_np * 255).astype(np.uint8), mode='L').save(png_path)
+
+    # save pkl (downscaled to grid, normalized to distribution)
+    sal = torch.from_numpy(sal_np).unsqueeze(0).unsqueeze(0)
+    sal = F.interpolate(sal, size=grid_shape, mode='bilinear', align_corners=False)
+    sal = sal / sal.sum()
+    pickle.dump(sal.cpu(), open(pkl_path, "wb"))
+
+    print(f"Saved saliency map to {pkl_path} and {png_path}")
